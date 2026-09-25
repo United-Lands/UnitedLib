@@ -10,7 +10,11 @@ import org.unitedlands.factories.items.VanillaItemFactory;
 import org.unitedlands.factories.mobs.IMobFactory;
 import org.unitedlands.factories.mobs.MythicMobFactory;
 import org.unitedlands.factories.mobs.VanillaMobFactory;
-import org.unitedlands.utils.Logger;
+import org.unitedlands.menu.UnitedMenuListener;
+import org.unitedlands.registrars.UnitedLifecycleListener;
+import org.unitedlands.registrars.config.UnitedConfigRegistrar;
+import org.unitedlands.registrars.messages.UnitedMessagesRegistrar;
+import org.unitedlands.utils.United;
 
 public class UnitedLib extends JavaPlugin {
 
@@ -26,12 +30,19 @@ public class UnitedLib extends JavaPlugin {
     @Override
     public void onEnable() {
 
-        saveDefaultConfig();
+        UnitedConfigRegistrar.registerAll(this);
+        UnitedMessagesRegistrar.registerAll(this);
 
         loadFactories();
+        loadListeners();
 
-        getLogger().info("UnitedLib initialized.");
+        United.logger().info("UnitedLib initialized.");
+    }
 
+    @Override
+    public void onDisable() {
+        UnitedConfigRegistrar.unregisterAll(this);
+        UnitedMessagesRegistrar.unregisterAll(this);
     }
 
     private void loadFactories() {
@@ -40,25 +51,30 @@ public class UnitedLib extends JavaPlugin {
         Plugin nexo = Bukkit.getPluginManager().getPlugin("Nexo");
 
         if (nexo != null && nexo.isEnabled()) {
-            Logger.log("Nexo found, using custom item factory.");
+            United.logger().info("Nexo found, using custom item factory.");
             itemFactory = new NexoFactory();
         } else if (itemsAdder != null && itemsAdder.isEnabled()) {
-            Logger.log("ItemsAdder found, using custom item factory.");
+            United.logger().info("ItemsAdder found, using custom item factory.");
             itemFactory = new ItemsAdderFactory();
         } else {
-            Logger.log("ItemsAdder not found, using vanilla item factory.");
+            United.logger().info("ItemsAdder not found, using vanilla item factory.");
             itemFactory = new VanillaItemFactory();
         }
 
         Plugin mythicMobs = Bukkit.getPluginManager().getPlugin("MythicMobs");
         if (mythicMobs != null && mythicMobs.isEnabled()) {
-            Logger.log("MythicMobs found, using custom mob factory.");
+            United.logger().info("MythicMobs found, using custom mob factory.");
             mobFactory = new MythicMobFactory();
         } else {
-            Logger.log("MythicMobs not found, using vanilla mob factory.");
+            United.logger().info("MythicMobs not found, using vanilla mob factory.");
             mobFactory = new VanillaMobFactory();
         }
 
+    }
+
+    private void loadListeners() {
+        Bukkit.getPluginManager().registerEvents(new UnitedLifecycleListener(), this);
+        Bukkit.getPluginManager().registerEvents(new UnitedMenuListener(), this);
     }
 
     public static UnitedLib getInstance() {

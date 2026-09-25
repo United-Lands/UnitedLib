@@ -15,9 +15,13 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.unitedlands.interfaces.ICommandHandler;
 import org.unitedlands.interfaces.IMessageProvider;
-import org.unitedlands.utils.Formatter;
+import org.unitedlands.registrars.command.UnitedCommandExecutor;
+import org.unitedlands.utils.United;
 
-
+/**
+ * @deprecated Use {@link UnitedCommandExecutor} instead.
+ */
+@Deprecated(since = "2.0", forRemoval = true)
 public abstract class BaseCommandExecutor<P extends Plugin> implements CommandExecutor, TabCompleter {
 
     protected final P plugin;
@@ -53,7 +57,7 @@ public abstract class BaseCommandExecutor<P extends Plugin> implements CommandEx
             }
         }
 
-        return Formatter.getSortedCompletions(input, options);
+        return United.formatter().getSortedCompletions(input, options);
     }
 
     @Override
