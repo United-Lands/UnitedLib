@@ -3,6 +3,7 @@ package org.unitedlands.factories.mobs;
 import java.util.UUID;
 
 import org.bukkit.Location;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 
 public abstract class BaseMobFactory implements IMobFactory {
@@ -24,6 +25,6 @@ public abstract class BaseMobFactory implements IMobFactory {
             String faction);
 
     public abstract void setName(UUID id, String name);
-            
-
+    
+    public abstract String getMobType(Entity entity);
 }

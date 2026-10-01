@@ -3,6 +3,7 @@ package org.unitedlands.factories.mobs;
 import java.util.UUID;
 
 import org.bukkit.Location;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -63,7 +64,8 @@ public class MythicMobFactory extends BaseMobFactory {
             }
             return activeMythicMob.getUniqueId();
         } else {
-            United.logger().error("Unable to create custom mob " + mobType + ", vanilla mobs are not supported as minions.");
+            United.logger()
+                    .error("Unable to create custom mob " + mobType + ", vanilla mobs are not supported as minions.");
         }
         return null;
     }
@@ -73,6 +75,16 @@ public class MythicMobFactory extends BaseMobFactory {
         var mythicMob = MythicBukkit.inst().getMobManager().getActiveMob(id);
         if (mythicMob.isPresent()) {
             mythicMob.get().setDisplayName(name);
+        }
+    }
+
+    @Override
+    public String getMobType(Entity entity) {
+        var mythicMob = MythicBukkit.inst().getMobManager().getActiveMob(entity.getUniqueId()).orElse(null);
+        if (mythicMob != null) {
+            return mythicMob.getMobType();
+        } else {
+            return entity.getType().toString();
         }
     }
 

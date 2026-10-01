@@ -4,6 +4,7 @@ import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -56,6 +57,11 @@ public class VanillaMobFactory extends BaseMobFactory {
             mob.customName(Component.text(name));
         }
         return;
+    }
+
+    @Override
+    public String getMobType(Entity entity) {
+        return entity.getType().toString();
     }
 
 }
