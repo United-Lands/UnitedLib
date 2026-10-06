@@ -5,6 +5,7 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
@@ -229,15 +230,39 @@ public class UnitedMenuBuilder implements InventoryHolder {
     }
 
     void handleClick(InventoryClickEvent event) {
-        event.setCancelled(true);
-
         var slot = event.getRawSlot();
-        if (slot < 0 || slot >= inventory.getSize())
-            return;
 
-        var action = actions.get(slot);
-        if (action != null)
-            action.onClick(event);
+        if (slot < 0) return;
+
+        boolean isTopInventory = slot < inventory.getSize();
+
+        if (isTopInventory) {
+            // Top menu always locked.
+            event.setCancelled(true);
+            var action = actions.get(slot);
+            if (action != null)
+                action.onClick(event);
+        } else {
+            // Bottom menu depends on settings.
+            if (!ann.allowPlayerInventory() || event.isShiftClick()) {
+                event.setCancelled(true);
+            }
+        }
+    }
+
+    void handleDrag(InventoryDragEvent event) {
+        // Cancel item drags that touch top menu.
+        for (int slot : event.getRawSlots()) {
+            if (slot < inventory.getSize()) {
+                event.setCancelled(true);
+                return;
+            }
+        }
+
+        // Conditionally allow bottom menu drags.
+        if (!ann.allowPlayerInventory()) {
+            event.setCancelled(true);
+        }
     }
 
     void handleClose(InventoryCloseEvent event) {

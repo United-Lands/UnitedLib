@@ -19,6 +19,8 @@ public @interface UnitedMenu {
     UnitedMenuSize size()      default UnitedMenuSize.THREE_ROWS;
     InventoryType  type()      default InventoryType.CHEST;
     boolean        closeable() default true;
+    /** @noinspection BooleanMethodIsAlwaysInverted*/
+    boolean        allowPlayerInventory() default false;
 
     boolean  borders()        default false;
     Material borderMaterial() default Material.GRAY_STAINED_GLASS_PANE;

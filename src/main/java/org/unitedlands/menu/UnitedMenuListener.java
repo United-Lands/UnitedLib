@@ -22,8 +22,7 @@ public class UnitedMenuListener implements Listener {
 
     @EventHandler
     public void onDrag(InventoryDragEvent event) {
-        if (event.getInventory().getHolder() instanceof UnitedMenuBuilder)
-            event.setCancelled(true);
+        if (event.getInventory().getHolder() instanceof UnitedMenuBuilder menu)
+            menu.handleDrag(event);
     }
-
 }
