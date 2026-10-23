@@ -10,7 +10,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.unitedlands.UnitedLib;
 import org.unitedlands.annotations.UnitedCommand;
 import org.unitedlands.annotations.UnitedSubCommand;
@@ -150,7 +149,7 @@ public class UnitedMessenger {
         var style  = new UnitedFrame.Style(mono ? config.consoleWidth() : config.width(), mono, config.color(),
                 config.leftCap(), config.rightCap(), config.titleOpen(), config.titleClose(), config.footerCenter());
 
-        var titlePlain = MiniMessage.miniMessage().stripTags(applyReplacements(title, plainValues(values)));
+        var titlePlain = United.miniMessage().get().stripTags(applyReplacements(title, plainValues(values)));
 
         target.sendMessage(buildComponentRaw(UnitedFrame.build(title, titlePlain, body, style), values, null));
     }
@@ -288,7 +287,7 @@ public class UnitedMessenger {
 
         text = applyReplacements(text, values);
 
-        var component = MiniMessage.miniMessage().deserialize(text);
+        var component = United.miniMessage().get().deserialize(text);
         return applyComponentReplacements(component, values);
     }
 
