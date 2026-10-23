@@ -5,6 +5,7 @@ import org.unitedlands.annotations.UnitedSection;
 import org.unitedlands.annotations.UnitedSetting;
 import org.unitedlands.registrars.config.UnitedConfigHandler;
 import org.unitedlands.registrars.config.UnitedConfigs;
+import org.unitedlands.registrars.config.UnitedDynamicSection;
 
 @UnitedConfig
 public interface UnitedLibConfig extends UnitedConfigHandler {
@@ -21,6 +22,9 @@ public interface UnitedLibConfig extends UnitedConfigHandler {
     @UnitedSection(key = "frame")
     Frame frame();
 
+    @UnitedSection (key = "minimessage-placeholders")
+    UnitedDynamicSection<TagPlaceholder> minimessagePlaceholders();
+
     record Frame(
             @UnitedSetting(key = "width",         def = "300") int    width,
             @UnitedSetting(key = "console-width", def = "50")  int    consoleWidth,
@@ -32,4 +36,8 @@ public interface UnitedLibConfig extends UnitedConfigHandler {
             @UnitedSetting(key = "footer-center", def = "+✦+") String footerCenter
     ) {}
 
+    record TagPlaceholder(
+        @UnitedSetting (key = "tag") String tag,
+        @UnitedSetting (key = "color") String color
+    ) { }
 }

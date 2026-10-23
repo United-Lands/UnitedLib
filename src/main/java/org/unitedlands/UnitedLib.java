@@ -3,6 +3,7 @@ package org.unitedlands;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.unitedlands.commands.CmdUnitedLib;
 import org.unitedlands.factories.items.IItemFactory;
 import org.unitedlands.factories.items.ItemsAdderFactory;
 import org.unitedlands.factories.items.NexoFactory;
@@ -35,6 +36,8 @@ public class UnitedLib extends JavaPlugin {
 
         loadFactories();
         loadListeners();
+
+        this.getCommand("unitedlib").setExecutor(new CmdUnitedLib());
 
         United.logger().info("UnitedLib initialized.");
     }

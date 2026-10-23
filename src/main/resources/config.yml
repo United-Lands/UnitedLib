@@ -11,3 +11,29 @@ frame:
   title-open: "["
   title-close: "]"
   footer-center: "+✦+"
+
+minimessage-placeholders:
+  tag1:
+    tag: body
+    color: "#CCCCCC"
+  tag2:
+    tag: label
+    color: "#FFFFFF"
+  tag3:
+    tag: warn
+    color: "#FFFF00"
+  tag4:
+    tag: error
+    color: "#FF0000"
+  tag5:
+    tag: success
+    color: "#00FF00"
+  tag6:
+    tag: primary
+    color: "#123456"
+  tag7:
+    tag: secondary
+    color: "#345678"
+  tag8:
+    tag: tertiary
+    color: "#567890"

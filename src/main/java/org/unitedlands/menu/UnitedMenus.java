@@ -1,6 +1,5 @@
 package org.unitedlands.menu;
 
-import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryType;
@@ -19,7 +18,7 @@ public class UnitedMenus {
         }
 
         var menu  = new UnitedMenuBuilder(ann);
-        var title = MiniMessage.miniMessage().deserialize(ann.title());
+        var title = United.miniMessage().get().deserialize(ann.title());
         var inv   = ann.type() == InventoryType.CHEST
                 ? Bukkit.createInventory(menu, ann.size().slots, title)
                 : Bukkit.createInventory(menu, ann.type(), title);
