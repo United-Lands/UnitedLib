@@ -16,6 +16,8 @@ public class UnitedLifecycleListener implements Listener {
     public void onPluginEnable(PluginEnableEvent event) {
         if (!(event.getPlugin() instanceof JavaPlugin plugin))
             return;
+        if (!plugin.isEnabled())
+            return;
 
         var deps     = plugin.getPluginMeta().getPluginDependencies();
         var softDeps = plugin.getPluginMeta().getPluginSoftDependencies();
