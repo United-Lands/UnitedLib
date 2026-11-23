@@ -5,16 +5,20 @@ import org.unitedlands.utils.United;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.field.FieldType;
 import com.j256.ormlite.misc.TransactionManager;
+import com.j256.ormlite.support.ConnectionSource;
 
 import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
@@ -29,6 +33,9 @@ public abstract class BaseDbService<T extends Identifiable> {
             .newSingleThreadExecutor(threadFactory("unitedlands-db-write"));
     private static final ExecutorService READ_EXECUTOR = Executors.newFixedThreadPool(4,
             threadFactory("unitedlands-db-read"));
+
+    // Outstanding writes per connection source, i.e. per plugin
+    private static final Map<ConnectionSource, Set<CompletableFuture<?>>> PENDING_WRITES = new ConcurrentHashMap<>();
 
     @FunctionalInterface
     protected interface SqlSupplier<R> {
@@ -48,6 +55,40 @@ public abstract class BaseDbService<T extends Identifiable> {
         };
     }
 
+    /**
+     * Blocks until all writes issued through the given connection source have
+     * completed, or the timeout expires. Plugins call this before closing their own
+     * connection pool; the shared executors keep running for other plugins.
+     *
+     * @return true if all writes finished in time
+     */
+    public static boolean awaitPendingWrites(ConnectionSource connectionSource, long timeoutSeconds) {
+        var writes = PENDING_WRITES.get(connectionSource);
+        if (writes == null || writes.isEmpty())
+            return true;
+
+        var pending = writes.toArray(CompletableFuture[]::new);
+        United.logger().info("[DB] Waiting for " + pending.length + " pending write(s)...");
+        try {
+            CompletableFuture.allOf(pending).get(timeoutSeconds, TimeUnit.SECONDS);
+            return true;
+        } catch (ExecutionException ex) {
+            // Individual failures have already been logged
+            return true;
+        } catch (TimeoutException ex) {
+            United.logger().error("[DB] Timed out waiting for " + writes.size() + " pending write(s).");
+            return false;
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            return false;
+        }
+    }
+
+    /**
+     * Shuts down the shared executors. Only UnitedLib calls this, after all
+     * dependent plugins have been disabled. Plugins use
+     * {@link #awaitPendingWrites(ConnectionSource, long)} instead.
+     */
     public static void shutdownExecutors(long timeoutSeconds) {
         READ_EXECUTOR.shutdownNow();
         WRITE_EXECUTOR.shutdown();
@@ -91,7 +132,19 @@ public abstract class BaseDbService<T extends Identifiable> {
     }
 
     protected <R> CompletableFuture<R> writeAsync(String operation, SqlSupplier<R> write, R fallback) {
-        return submit(WRITE_EXECUTOR, logged(operation, write, fallback));
+        return submitWrite(logged(operation, write, fallback));
+    }
+
+    /**
+     * Queues a write on the shared write executor and tracks it per connection
+     * source, so the owning plugin can drain its writes on shutdown.
+     */
+    private <R> CompletableFuture<R> submitWrite(Supplier<R> work) {
+        var writes = PENDING_WRITES.computeIfAbsent(dao.getConnectionSource(), k -> ConcurrentHashMap.newKeySet());
+        var future = submit(WRITE_EXECUTOR, work);
+        writes.add(future);
+        future.whenComplete((result, ex) -> writes.remove(future));
+        return future;
     }
 
     private String describe(T entity) {
@@ -151,7 +204,7 @@ public abstract class BaseDbService<T extends Identifiable> {
         List<T> list = snapshot(entities);
         String operation = describe("Create", entities);
 
-        return submit(WRITE_EXECUTOR, () -> {
+        return submitWrite(() -> {
             int total = list.size();
             int batches = (total + BATCH_SIZE - 1) / BATCH_SIZE;
             int created = 0;
@@ -208,7 +261,7 @@ public abstract class BaseDbService<T extends Identifiable> {
         List<T> list = snapshot(entities);
         String operation = describe("Update", entities);
 
-        return submit(WRITE_EXECUTOR, () -> {
+        return submitWrite(() -> {
             int total = list.size();
             int batches = (total + BATCH_SIZE - 1) / BATCH_SIZE;
             int updated = 0;
@@ -277,7 +330,7 @@ public abstract class BaseDbService<T extends Identifiable> {
         List<T> list = snapshot(entities);
         String operation = describe("Delete", entities);
 
-        return submit(WRITE_EXECUTOR, () -> {
+        return submitWrite(() -> {
             int total = list.size();
             int batches = (total + BATCH_SIZE - 1) / BATCH_SIZE;
             int deleted = 0;

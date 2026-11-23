@@ -3,6 +3,7 @@ package org.unitedlands;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.unitedlands.classes.database.BaseDbService;
 import org.unitedlands.commands.CmdUnitedLib;
 import org.unitedlands.factories.items.IItemFactory;
 import org.unitedlands.factories.items.ItemsAdderFactory;
@@ -44,6 +45,10 @@ public class UnitedLib extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        // All dependent plugins are disabled before UnitedLib and have drained their
+        // own writes by now, so it's safe to stop the shared database executors.
+        BaseDbService.shutdownExecutors(30);
+
         UnitedConfigRegistrar.unregisterAll(this);
         UnitedMessagesRegistrar.unregisterAll(this);
     }
