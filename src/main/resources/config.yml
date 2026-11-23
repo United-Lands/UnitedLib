@@ -37,3 +37,6 @@ minimessage-placeholders:
   tag8:
     tag: tertiary
     color: "#567890"
+  tag9:
+    tag: broadcast
+    color: "#00FFFF"
